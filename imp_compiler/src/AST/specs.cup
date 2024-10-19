@@ -1,0 +1,59 @@
+/* cup specification file for IMP with security labels */ 
+
+package AST; 
+import java_cup.runtime.*; 
+
+/* Preliminaries to set up and use scanner */
+
+/* Terminals */ 
+
+terminal SKIP, ASSIGN, SEMI, IF, 
+        THEN, ELSE, WHILE, DO, RETURN, END,
+        EQ, LESSTHEN, PLUS, MINUS, MULT, OR, AND, 
+        LBRACE, RBRACE, HIGH, LOW, TYPE;
+terminal Integer INTEGER; 
+terminal Boolean BOOLEAN;
+terminal String ID;
+
+/* Non-Terminals */ 
+
+non terminal ProgramNode program; 
+non terminal CommandNode command_list;
+non terminal CommandNode command;
+non terminal ExpressionNode expr;
+
+/* Precedences */ 
+
+precedence left PLUS, MINUS;
+precedence left MULT;
+precedence left OR; 
+precedence left AND;
+precedence left LESSTHEN, EQ; 
+
+/* Grammar */ 
+
+program ::= command_list:p {: RESULT = new ProgramNode(new Node[] { p }); :};
+
+command_list ::= command:c {: RESULT = c; :}
+                | command_list:c1 SEMI command:c2 {: RESULT = new SeqNode(new Node[] { c1, c2 }); :}
+                | command_list:c SEMI RETURN expr:e {: RESULT = new SeqNode(new Node[] { c, new ReturnNode(e) }); :};
+
+
+command ::= ID:i ASSIGN expr:e {: RESULT = new AssignNode(new VarNameNode(i), e); :}
+            | SKIP {: RESULT = new SkipcmdNode(); :}
+            | WHILE expr:e DO command_list:c END {: RESULT = new WhileNode(e, c); :}
+            | IF expr:e THEN command:c1 ELSE command:c2 {: RESULT = new IfNode(e, c1, c2); :}
+            | TYPE:t LBRACE HIGH:H RBRACE ID:i {: RESULT = new VarDeclNode(i, true); :}
+            | TYPE:t LBRACE LOW:L RBRACE ID:i  {: RESULT = new VarDeclNode(i, false); :};
+
+/* Expressions */
+expr ::= expr:e1 PLUS expr:e2     {: RESULT = new BinOpNode("+", e1, e2); :}
+      | expr:e1 MINUS expr:e2     {: RESULT = new BinOpNode("-", e1, e2); :}
+      | expr:e1 MULT expr:e2      {: RESULT = new BinOpNode("*", e1, e2); :}
+      | expr:e1 OR expr:e2       {: RESULT = new BinOpNode("||", e1, e2); :}
+      | expr:e1 AND expr:e2       {: RESULT = new BinOpNode("&&", e1, e2); :}
+      | expr:e1 EQ expr:e2        {: RESULT = new BinOpNode("==", e1, e2); :}
+      | expr:e1 LESSTHEN expr:e2  {: RESULT = new BinOpNode("<", e1, e2); :}
+      | INTEGER:n             {: RESULT = new IntValueNode(n); :}
+      | BOOLEAN:b             {: RESULT = new BoolValueNode(b); :}
+      | ID:i                  {: RESULT = new VarNameNode(i); :};

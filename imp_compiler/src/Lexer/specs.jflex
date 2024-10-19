@@ -1,4 +1,5 @@
 import java_cup.runtime.*;
+import AST.sym;
 
 %% 
 
@@ -77,7 +78,7 @@ Boolean = true | false
 
 "bool"        { return symbol(sym.TYPE, "BOOL"); }
 
-{Boolean}     { return symbol(sym.BOOLEAN, yytext()); }
+{Boolean}     { return symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext())); }
 
 {Identifier}  { return symbol(sym.ID, yytext()); }
 

@@ -3,6 +3,7 @@
 // source: specs.jflex
 
 import java_cup.runtime.*;
+import AST.sym;
 
 
 @SuppressWarnings("fallthrough")
@@ -878,7 +879,7 @@ Integer.parseInt(yytext()));
           // fall through
           case 53: break;
           case 26:
-            { return symbol(sym.BOOLEAN, yytext());
+            { return symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext()));
             }
           // fall through
           case 54: break;
