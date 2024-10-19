@@ -9,53 +9,20 @@ import java_cup.runtime.*;
 %column
 
 %{
- enum TokenType {
- ID,
- INT,
- BOOL,
- TYPE,
- HIGH,
- LOW,
- LBRACE,
- RBRACE,
- COLON,
- PLUS,
- TIMES,
- LESSTHEN,
- EQ,
- SKIP, 
- ASSIGN,
- SEMICOLON,
- IF, 
- THEN,
- ELSE,
- WHILE,
- Do,
- RETURN
-}
+    private Symbol symbol(int type){
+        return new Symbol(type, yyline, yycolumn);
+    }
 
- class Token {
-  TokenType type;
-  Object attribute; 
-  Token(TokenType tt) {
-   type = tt; attribute = null;
-  }
-  Token(TokenType tt, Object attr) {
-   type = tt; attribute = attr;
-  }
-  public String toString() {
-   return "" + type + "(" + attribute + ")";
-  }
- }
- public int lineNumber() { return yyline + 1; }
- public int column() { return yycolumn + 1; }
+    private Symbol symbol(int type, Object value){
+        return new Symbol(type, yyline, yycolumn, value); 
+    }
 %}
 
 Whitespace = [ \t\f\r\n]
 Letter = [a-zA-Z]
 Digit = [0-9]
 Identifier = {Letter}({Digit}|{Letter}|_)*
-Integer = "0"|"-"?[1-9]{Digit}*
+Integer = "0"|[1-9]{Digit}*
 Boolean = true | false
 
 
@@ -64,43 +31,58 @@ Boolean = true | false
 
 {Whitespace}  { /* ignore */ }
 
-"="           { return new Token(TokenType.EQ); }
+"="           { return symbol(sym.EQ); }
 
-"<"           { return new Token(TokenType.LESSTHEN); }
+"<"           { return symbol(sym.LESSTHEN); }
 
-"skip"        { return new Token(TokenType.SKIP); }
+"+"           { return symbol(sym.PLUS); }
 
-":="          { return new Token(TokenType.ASSIGN); }
+"-"           { return symbol(sym.MINUS); }
 
-";"           { return new Token(TokenType.SEMICOLON); }
+"*"           { return symbol(sym.MULT); }
 
-"if"          { return new Token(TokenType.IF); }
+"||"          { return symbol(sym.OR); }
 
-"then"        { return new Token(TokenType.THEN); }
+"&&"          { return symbol(sym.AND); }
 
-"else"        { return new Token(TokenType.ELSE); }
+"skip"        { return symbol(sym.SKIP); }
 
-"while"       { return new Token(TokenType.WHILE); }
+":="          { return symbol(sym.ASSIGN); }
 
-"do"          { return new Token(TokenType.DO); }
+";"           { return symbol(sym.SEMI); }
 
-"return"      { return new Token(TokenType.RETURN); }
+"if"          { return symbol(sym.IF); }
 
-"{"           { return new Token(TokenType.LBRACE); }
+"then"        { return symbol(sym.THEN); }
 
-"}"           { return new Token(TokenType.RBRACE); }
+"else"        { return symbol(sym.ELSE); }
 
-"high"        { return new Token(TokenType.HIGH); }
+"while"       { return symbol(sym.WHILE); }
 
-"low"         { return new Token(TokenType.LOW); }
+"do"          { return symbol(sym.DO); }
 
-"int"         { return new Token(TokenType.TYPE, "INT"); }
+"end"         { return symbol(sym.END); }
 
-"bool"        { return new Token(TokenType.TYPE, "BOOL"); }
+"return"      { return symbol(sym.RETURN); }
 
-{Identifier}  { return new Token(TokenType.ID, yytext()); }
+"{"           { return symbol(sym.LBRACE); }
 
-{Integer}     { return new Token(TokenType.INT,
+"}"           { return symbol(sym.RBRACE); }
+
+"high"        { return symbol(sym.HIGH); }
+
+"low"         { return symbol(sym.LOW); }
+
+"int"         { return symbol(sym.TYPE, "INT"); }
+
+"bool"        { return symbol(sym.TYPE, "BOOL"); }
+
+{Boolean}     { return symbol(sym.BOOLEAN, yytext()); }
+
+{Identifier}  { return symbol(sym.ID, yytext()); }
+
+{Integer}     { return symbol(sym.INTEGER,
 Integer.parseInt(yytext())); }
 
-{Boolean}     { return new Token(TokenType.BOOL, yytext()); }
+/* error fallback */
+[^]           { throw new Error("Illegal character <" + yytext()+">"); }
