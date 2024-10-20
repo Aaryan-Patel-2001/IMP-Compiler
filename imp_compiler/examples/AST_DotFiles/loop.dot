@@ -1,0 +1,37 @@
+digraph AST {
+  0 [label="program"];
+  1 [label="Seq"];
+  0 -> 1;
+  2 [label="Seq"];
+  1 -> 2;
+  3 [label="VarDecl"];
+  2 -> 3;
+  4 [label="ID"];
+  3 -> 4;
+  5 [label="VarDecl"];
+  2 -> 5;
+  6 [label="ID"];
+  5 -> 6;
+  7 [label="While"];
+  1 -> 7;
+  8 [label="Boolean"];
+  7 -> 8;
+  9 [label="Seq"];
+  7 -> 9;
+  10 [label="Assign"];
+  9 -> 10;
+  11 [label="ID"];
+  10 -> 11;
+  12 [label="Integer"];
+  10 -> 12;
+  13 [label="Assign"];
+  9 -> 13;
+  14 [label="ID"];
+  13 -> 14;
+  15 [label="BinOp"];
+  13 -> 15;
+  16 [label="ID"];
+  15 -> 16;
+  17 [label="Integer"];
+  15 -> 17;
+}

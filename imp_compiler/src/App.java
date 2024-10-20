@@ -8,7 +8,7 @@ public class App {
     public static void main(String[] args) throws Exception {
         try {
             // Initialize the parser with your source file
-            parser p = new parser(new Lexer(new FileReader("/Users/aaryanpatel/IMP-Compiler/imp_compiler/examples/source/example.imp")));
+            parser p = new parser(new Lexer(new FileReader("/Users/aaryanpatel/IMP-Compiler/imp_compiler/examples/source/loop.imp")));
             
             // Parse the file and get the AST root node
             Object result = p.parse().value;
