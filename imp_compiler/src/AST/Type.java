@@ -27,6 +27,17 @@ public class Type {
         return Label.HIGH;
     }
 
+    // Flow is allowed from l1 to l2: return true, false otherwise
+    public static boolean LabelFlowAllowed(Label l1, Label l2){
+        if (l1 == l2){
+            return true; 
+        }
+        if (l1 == Label.LOW && l2 == Label.HIGH){
+            return true; 
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         return baseType.toString() + "_" + label.toString();

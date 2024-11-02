@@ -74,9 +74,9 @@ Boolean = true | false
 
 "low"         { return symbol(sym.LOW); }
 
-"int"         { return symbol(sym.TYPE, "INT"); }
+"int"         { return symbol(sym.TYPE, yytext()); }
 
-"bool"        { return symbol(sym.TYPE, "BOOL"); }
+"bool"        { return symbol(sym.TYPE, yytext()); }
 
 {Boolean}     { return symbol(sym.BOOLEAN, Boolean.parseBoolean(yytext())); }
 

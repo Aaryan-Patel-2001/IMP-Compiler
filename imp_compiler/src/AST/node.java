@@ -77,6 +77,13 @@ class ProgramNode extends Node {
     public ProgramNode(Node[] children) {
         super("program", children);
     }
+
+    public void typeCheckCmd(Environment env) throws SemanticError {
+        for (Node child : children) {
+            child.typeCheckCmd(env);
+        }
+    }
+
 }
 
 class CommandNode extends Node {
@@ -217,27 +224,33 @@ class SkipcmdNode extends CommandNode {
     }
 }
 
-/* Variable Declaration Node */
-// TODO: Variable declaration node does not take type. Need to change that! 
-// FIXME: Add these changes to specs.cup and the parser code 
+/* Variable Declaration Node */  
 // Note: Seems like lexer passes in TYPE for both int and bool, and passes int and bool as values to the type 
 class VarDeclNode extends CommandNode {
     private final boolean isHigh;  // To track whether it's HIGH or LOW security
+    private final Type.BaseType type;
 
-    public VarDeclNode(String id, boolean isHigh) {
+    public VarDeclNode(String id, boolean isHigh, String type) {
         super("VarDecl", new Node[] { new VarNameNode(id) });
         this.isHigh = isHigh;
+        this.type = type.equals("int") ? Type.BaseType.INT : Type.BaseType.BOOL;
     }
 
     public boolean isHigh() {
         return isHigh;
     }
 
+    public Type.BaseType getType() {
+        return type;
+    }
+
     @Override
-    public void typeCheckCmd(Environment env) {
-        String varName = ((VarNameNode) children[0]).getVariable();
-        Type varType = new Type(Type.BaseType.INT, isHigh ? Type.Label.HIGH : Type.Label.LOW);
-        env.declare(varName, varType);
+    public void typeCheckCmd(Environment env) throws SemanticError {
+        String id = ((VarNameNode) children[0]).getVariable();
+        if (env.lookup(id) != null) {
+            throw new SemanticError("Variable " + id + " already declared");
+        }
+        env.declare(id, new Type(type, isHigh ? Type.Label.HIGH : Type.Label.LOW));
     }
 }
 
@@ -255,13 +268,13 @@ class AssignNode extends CommandNode {
         if (varType.getBaseType() != exprType.getBaseType()) {
             throw new SemanticError("Type mismatch in assignment: " + varType + " = " + exprType);
         }
-        if (varType.getLabel() == Type.Label.LOW && exprType.getLabel() == Type.Label.HIGH) {
+        if (!Type.LabelFlowAllowed(Type.LabelUpperBound(exprType.getLabel(), env.getPC()), varType.getLabel())) {
             throw new SemanticError("Assignment of HIGH to LOW variable: " + varType + " = " + exprType);
         }
     }
 }
 
-// TODO: branches and labels for IF command 
+/* If Node */
 class IfNode extends CommandNode {
     public IfNode(Node condition, Node thenBranch, Node elseBranch) {
         super("If", new Node[] { condition, thenBranch, elseBranch });
@@ -273,14 +286,13 @@ class IfNode extends CommandNode {
         if (condType.getBaseType() != Type.BaseType.BOOL) {
             throw new SemanticError("Non-boolean condition in if statement: " + condType);
         }
-
+        env.setPC(Type.LabelUpperBound(env.getPC(), condType.getLabel()));
         children[1].typeCheckCmd(env);
         children[2].typeCheckCmd(env);
     }
 }
 
 /* While Loop Node */
-// TODO: branches and labels for WHILE command
 class WhileNode extends CommandNode {
     public WhileNode(Node condition, Node body) {
         super("While", new Node[] { condition, body });
@@ -292,7 +304,7 @@ class WhileNode extends CommandNode {
         if (condType.getBaseType() != Type.BaseType.BOOL) {
             throw new SemanticError("Non-boolean condition in while loop: " + condType);
         }
-
+        env.setPC(Type.LabelUpperBound(env.getPC(), condType.getLabel()));
         children[1].typeCheckCmd(env);
     }
 }
@@ -319,8 +331,8 @@ class ReturnNode extends CommandNode {
 
     @Override
     public void typeCheckCmd(Environment env) throws SemanticError {
-        children[0].typeCheck(env);
-        if (children[0].typeCheck(env).getLabel() == Type.Label.HIGH) {
+        Type exprType = children[0].typeCheck(env);
+        if (exprType.getLabel() == Type.Label.HIGH) {
             throw new SemanticError("Return value cannot be HIGH security");
         }
     }
